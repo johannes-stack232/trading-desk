@@ -211,7 +211,7 @@
   }
   function imgFor(mint) {   // canvas use: cached Image elements for chart pills
     const u = L.img[mint]; if (!u) return null;
-    if (!L.imgEl[mint]) { const im = new Image(); im.referrerPolicy = "no-referrer"; im.crossOrigin = "anonymous"; im.onload = () => render(); im.src = u; L.imgEl[mint] = im; }
+    if (!L.imgEl[mint]) { const im = new Image(); im.referrerPolicy = "no-referrer"; im.onload = () => render(); im.src = u; L.imgEl[mint] = im; }
     return L.imgEl[mint];
   }
   const ICON = {
@@ -271,7 +271,7 @@
       const pnl = c.lastExitPnl;
       body = `<div class="cb">${esc(c.lastExit || "No exits yet")}</div>
         ${c.lastExitName ? `<div class="cs ${pnl > 0 ? "green" : pnl < 0 ? "red" : ""}">${esc(c.lastExitName)} ${pnl != null ? esc(signedUsd(pnl)) : ""}</div>` : ""}
-        <div class="tags"><span class="tag redt">${esc(c.pills[0])}</span><span class="tag greent">${esc(c.pills[1].replace(/^trail (\d)/, "trail +$1"))}</span></div>`;
+        <div class="tags"><span class="tag redt">${esc(c.pills[0])}</span><span class="tag greent">${esc(c.pills[1])}</span></div>`;
     }
     return `<div class="acard" data-agent="${c.key}"><div class="ah">${icon(c.key)}<div><div class="an">${esc(c.name)}</div>${sub}</div></div><div class="abody">${body}</div></div>`;
   }
@@ -390,7 +390,7 @@
   function agents() {
     const st = S.d["state.json"];
     const order = ["scanner", "scanner2", "auditor", "analyst", "executor", "risk"].filter(k => !st || st.agents.some(a => a.key === k));
-    let h = `<h1 class="large">Agents</h1>`;
+    let h = `<h1 class="large">Agents ${paperPill(st && st.mode)}</h1>`;
     if (!st) { $("#view").innerHTML = h + order.map(() => sk(220, 0, 16) + "<div style='height:14px'></div>").join(""); return; }
     h += order.map(k => {
       const c = st.agents.find(a => a.key === k), d = S.d[`agents/${k}.json`];
@@ -411,7 +411,7 @@
 
   async function activity() {
     const p0 = S.d["activity-0.json"];
-    let h = `<h1 class="large">Activity</h1>`;
+    const st0 = S.d["state.json"]; let h = `<h1 class="large">Activity ${paperPill(st0 && st0.mode)}</h1>`;
     if (!p0) { $("#view").innerHTML = h + sk(60, 0) + sk(60, 1) + sk(60, 1) + sk(60, 1); return; }
     const rows = (S.actRows && S.actRows.length > p0.rows.length) ? S.actRows : p0.rows;
     S.actNext = S.actNext !== undefined && S.actRows && S.actRows.length > p0.rows.length ? S.actNext : p0.next;
@@ -426,7 +426,7 @@
   function audit() {
     const a = S.d[S.view.mint ? `audit/${S.view.mint}.json` : "audit/latest.json"];
     let h = `<div class="nav">${backBtn(backLabel())}<div class="grow"></div></div>`;
-    const key = "audit:" + (S.view.mint || "latest") + ":" + (a ? a.ts : "") + ":" + (a ? a.status : "");
+    const key = "audit:" + (S.view.mint || "latest") + ":" + (a ? a.ts : "") + ":" + (a ? a.status : "") + ":" + (a && L.img[a.mint] ? 1 : 0);
     if ($("#view").dataset.k === key) return;   // nothing new: keep the beam animation
     $("#view").dataset.k = key;
     if (!a) {
@@ -525,7 +525,7 @@
 
   function account() {
     const a = S.d["account.json"], s = S.d["settings.json"];
-    let h = `<h1 class="large">Account</h1>`;
+    let h = `<h1 class="large">Account ${paperPill(a && a.mode)}</h1>`;
     if (!a || !s) { $("#view").innerHTML = h + sk(100, 0) + sk(150, 20) + sk(400, 20); return; }
     h += `<div class="list"><div class="lrow"><div class="main"><div class="t">Mode</div><div class="s">LIVE needs typing LIVE in Telegram</div></div>
         <div class="seg" style="width:150px"><span class="${a.mode === "PAPER" ? "on paperon" : ""}">PAPER</span><span class="${a.mode === "LIVE" ? "on" : ""}">LIVE</span></div></div>

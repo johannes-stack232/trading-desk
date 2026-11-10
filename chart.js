@@ -25,7 +25,7 @@
      later polls only move the head. Exit marks get a floating pill with a connector to a dot on the line; buys get a small blue dot. */
   const drawn = new Set();
   function drawLine(cv, data, key, imgFor) {
-    const pts = (data.points || []).map(([ts, v]) => [t(ts), v]);
+    const pts = (data.points || []).map(([ts, v]) => [t(ts), v]).filter(q => isFinite(q[0]) && isFinite(q[1])).sort((a, b) => a[0] - b[0]);
     const first = !drawn.has(key); drawn.add(key);
     const run = p => {
       const { ctx, w, h } = setup(cv);
@@ -42,7 +42,7 @@
       const xEnd = x0 + span * p;
       const draw = [];
       for (let i = 0; i < pts.length; i++) {
-        if (pts[i][0] <= xEnd) draw.push(pts[i]);
+        if (i === 0 || pts[i][0] <= xEnd) draw.push(pts[i]);
         else { const a = pts[i - 1], b = pts[i]; const f = (xEnd - a[0]) / Math.max(1, b[0] - a[0]); draw.push([xEnd, a[1] + (b[1] - a[1]) * f]); break; }
       }
       const up = pts[pts.length - 1][1] >= (data.start != null ? data.start : pts[0][1]);

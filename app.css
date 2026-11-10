@@ -148,7 +148,7 @@ h1.large{font-family:var(--disp);font-size:34px;font-weight:700;margin:0;padding
 .dec .cn a{color:#fff}
 .dec .rs{color:var(--sec);text-align:right;max-width:170px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .dec .rs.bad{color:var(--red)}.dec .rs.ok{color:var(--green)}
-.shortcut{display:flex;align-items:center;justify-content:space-between;color:var(--blue);min-height:44px;margin-top:8px;font-size:15px}
+.shortcut{display:flex;align-items:center;justify-content:space-between;color:var(--green);min-height:44px;margin-top:8px;font-size:15px}
 .note{color:var(--sec);font-size:13px;padding:8px var(--g) 0}
 /* auditor screen */
 .discs{position:relative;margin:10px auto 0;width:220px;height:290px}
@@ -244,9 +244,9 @@ h1.large{font-family:var(--disp);font-size:34px;font-weight:700;margin:0;padding
 .mini .mb{font-size:17px;font-weight:700}.mini .mp{font-size:12px;font-weight:600}
 /* notification pill */
 .npill{position:fixed;left:8px;right:8px;top:calc(var(--sat) + 8px);z-index:40;display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:22px;
-  background:rgba(44,44,46,.82);-webkit-backdrop-filter:blur(24px);backdrop-filter:blur(24px);text-align:left;transform:translateY(-140%);opacity:0;
-  transition:transform .45s cubic-bezier(.2,1.1,.3,1),opacity .3s}
-.npill.show{transform:none;opacity:1}
+  background:rgba(44,44,46,.82);-webkit-backdrop-filter:blur(24px);backdrop-filter:blur(24px);text-align:left;transform:translateY(calc(-100% - 60px));opacity:0;visibility:hidden;
+  transition:transform .45s cubic-bezier(.2,1.1,.3,1),opacity .3s,visibility 0s .45s}
+.npill.show{transform:none;opacity:1;visibility:visible;transition:transform .45s cubic-bezier(.2,1.1,.3,1),opacity .3s}
 .npill .appic{width:36px;height:36px;border-radius:9px}
 .npill .nb{flex:1;min-width:0}.npill .nt{font-size:15px;font-weight:700}
 .npill .nx{font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -279,8 +279,8 @@ h1.large{font-family:var(--disp);font-size:34px;font-weight:700;margin:0;padding
 .seg span.paperon{background:var(--orange);color:#000}
 /* take-profit card + confetti */
 .tp{position:fixed;left:10px;right:10px;bottom:calc(92px + var(--sab));z-index:45;display:flex;align-items:center;gap:12px;padding:14px;border-radius:20px;
-  background:rgba(28,28,30,.96);border:1px solid rgba(48,209,88,.35);text-align:left;transform:translateY(160%);transition:transform .5s cubic-bezier(.2,1.1,.3,1)}
-.tp.show{transform:none}
+  background:rgba(28,28,30,.96);border:1px solid rgba(48,209,88,.35);text-align:left;transform:translateY(calc(100% + 140px));visibility:hidden;transition:transform .5s cubic-bezier(.2,1.1,.3,1),visibility 0s .5s}
+.tp.show{transform:none;visibility:visible;transition:transform .5s cubic-bezier(.2,1.1,.3,1)}
 .tp .tpm{flex:1;min-width:0}.tp .tpt{font-size:17px;font-weight:700}.tp .tps{font-size:13px;color:var(--sec)}
 .tp .tpv{font-size:26px;font-weight:800;color:var(--green);text-align:right}.tp .tpp{font-size:13px;font-weight:600}
 .confetti{position:fixed;inset:0;width:100vw;height:100vh;pointer-events:none;z-index:60}
@@ -297,3 +297,5 @@ main.pop{animation:popIn .3s cubic-bezier(.2,.9,.3,1)}
   .ticker .tk,.blink,.execp i,main.push,main.pop,.odo.up,.odo.down{animation:none!important}
   .npill,.tp,.mini{transition:none}
 }
+.cs.red{color:var(--red)}.cs.green{color:var(--green)}
+h1.large{display:flex;align-items:center;gap:10px}h1.large .pill.paper{font-family:var(--txt);letter-spacing:0}
