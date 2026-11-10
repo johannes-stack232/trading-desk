@@ -331,7 +331,7 @@
       <a class="lrow" href="https://t.me/${esc(a.telegram.bot.replace("@", ""))}" target="_blank" rel="noopener"><div class="main"><div class="t">Send test push</div><div class="s">Send "test" to the bot</div></div>${chev}</a>
       <div class="lrow"><div class="main"><div class="t">Web push</div><div class="s">${esc(a.webpush.note)}</div></div></div></div>
       <div class="note">${esc(a.readOnlyNote)}</div>`;
-    const label = { scanner: "Scanner", auditor: "Auditor", analyst: "Analyst", executor: "Executor", risk: "Risk", desk: "Desk" };
+    const label = { scanner: "Scanner", auditor: "Auditor", analyst: "Analyst", executor: "Executor", risk: "Risk", desk: "Desk", paper: "Paper fills" };
     s.groups.forEach(g => {
       h += `<div class="group-title" id="set-${g.agent}">${label[g.agent]}</div><div class="list">` + g.items.map(it => {
         let ctl;
