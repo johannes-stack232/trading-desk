@@ -8,6 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Desk">
 <meta name="theme-color" content="#000000">
+<link rel="preconnect" href="https://api.dexscreener.com" crossorigin>
 <meta name="referrer" content="no-referrer">
 <meta name="robots" content="noindex, nofollow">
 <title>Grok Bot Desk</title>
@@ -15,16 +16,19 @@
   /* iOS: no manifest, so "Add to Home Screen" saves the exact page URL including the #d=&k= fragment.
      Other platforms get the manifest (it has no start_url, so the page URL is used there too). */
   if (!/iP(hone|ad|od)/.test(navigator.userAgent) && !(navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1)) {
-    var l = document.createElement("link"); l.rel = "manifest"; l.href = "manifest.json?v=20261110e"; document.head.appendChild(l);
+    var l = document.createElement("link"); l.rel = "manifest"; l.href = "manifest.json?v=20261110f"; document.head.appendChild(l);
   }
 </script>
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="icon" href="icons/icon-192.png">
-<link rel="stylesheet" href="app.css?v=20261110e">
+<link rel="stylesheet" href="app.css?v=20261110f">
 </head>
 <body>
 <div id="offline" class="offline" hidden></div>
+<div id="mini" class="mini"></div>
+<button id="npill" class="npill" aria-live="polite"></button>
 <main id="view"></main>
+<button id="tp" class="tp" aria-live="polite"></button>
 <nav class="tabbar" id="tabbar">
   <button data-tab="home" class="tab"><svg viewBox="0 0 24 24"><path d="M3 11.5 12 4l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg><span>Home</span></button>
   <button data-tab="agents" class="tab"><svg viewBox="0 0 24 24"><circle cx="8" cy="8" r="3"/><circle cx="16" cy="8" r="3"/><path d="M2 20c0-3.3 2.7-6 6-6s6 2.7 6 6M10 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/></svg><span>Agents</span></button>
@@ -32,8 +36,8 @@
   <button data-tab="account" class="tab"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg><span>Account</span></button>
 </nav>
 <div id="toast" class="toast" hidden></div>
-<script src="deskcrypto.js?v=20261110e"></script>
-<script src="chart.js?v=20261110e"></script>
-<script src="app.js?v=20261110e"></script>
+<script src="deskcrypto.js?v=20261110f"></script>
+<script src="chart.js?v=20261110f"></script>
+<script src="app.js?v=20261110f"></script>
 </body>
 </html>
