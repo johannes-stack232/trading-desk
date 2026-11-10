@@ -15,12 +15,12 @@
   /* iOS: no manifest, so "Add to Home Screen" saves the exact page URL including the #d=&k= fragment.
      Other platforms get the manifest (it has no start_url, so the page URL is used there too). */
   if (!/iP(hone|ad|od)/.test(navigator.userAgent) && !(navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1)) {
-    var l = document.createElement("link"); l.rel = "manifest"; l.href = "manifest.json?v=20261110d"; document.head.appendChild(l);
+    var l = document.createElement("link"); l.rel = "manifest"; l.href = "manifest.json?v=20261110e"; document.head.appendChild(l);
   }
 </script>
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="icon" href="icons/icon-192.png">
-<link rel="stylesheet" href="app.css?v=20261110d">
+<link rel="stylesheet" href="app.css?v=20261110e">
 </head>
 <body>
 <div id="offline" class="offline" hidden></div>
@@ -32,8 +32,8 @@
   <button data-tab="account" class="tab"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg><span>Account</span></button>
 </nav>
 <div id="toast" class="toast" hidden></div>
-<script src="deskcrypto.js?v=20261110d"></script>
-<script src="chart.js?v=20261110d"></script>
-<script src="app.js?v=20261110d"></script>
+<script src="deskcrypto.js?v=20261110e"></script>
+<script src="chart.js?v=20261110e"></script>
+<script src="app.js?v=20261110e"></script>
 </body>
 </html>

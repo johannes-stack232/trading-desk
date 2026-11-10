@@ -78,7 +78,7 @@ h1.large{font-family:var(--disp);font-size:34px;font-weight:700;margin:0;padding
 .feed .kill .l{color:var(--ter);text-decoration:line-through;text-decoration-color:var(--red)}
 .feed .kill .r{color:var(--red)}
 .feed .pass .l{color:#fff}
-.strips{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.strips{display:grid;grid-template-columns:repeat(9,1fr);gap:4px}
 .strips i{display:block;height:10px;border-radius:5px;background:var(--card2)}
 .strips i.ok{background:var(--green)}.strips i.bad{background:var(--red)}
 .bar{height:8px;border-radius:4px;background:var(--card2);overflow:hidden}

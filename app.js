@@ -142,7 +142,7 @@
           ? `<div class="row pass"><span class="l">${esc(f.text)}</span></div>`
           : `<div class="row kill"><span class="l">${esc(f.name)}</span><span class="r">${esc(f.reason || "")}</span></div>`).join("")}</div>`;
     } else if (c.key === "auditor") {
-      const strips = (c.last ? c.last.strips : Array(8).fill(null)).map(s => `<i class="${s === true ? "ok" : s === false ? "bad" : ""}"></i>`).join("");
+      const strips = (c.last ? c.last.strips : Array(9).fill(null)).map(s => `<i class="${s === true ? "ok" : s === false ? "bad" : ""}"></i>`).join("");
       const line = c.running ? "taking apart..." : c.last ? c.last.text : "No coin taken apart yet";
       body = `<div class="strips">${strips}</div><div style="font-weight:600">${esc(line)}</div><div class="sec">${esc(c.rejectedText)}</div>`;
     } else if (c.key === "analyst") {
@@ -256,7 +256,7 @@
     }
     if (a.status === "none") { $("#view").innerHTML = h + `<div class="empty" style="padding-top:80px">No coin taken apart yet</div>`; return; }
     h += `<div class="coinhead"><div class="nm">${esc(a.name)}</div><div class="sub">${esc(a.symbol || "")} · Solana · Auditor</div></div>
-      <div class="discs" id="discs">${a.layers.map((l, i) => `<div class="disc" data-i="${i}" style="top:${i * 31}px;z-index:${8 - i}"><span class="mk"></span></div>`).join("")}<div class="beam" id="beam"></div></div>
+      <div class="discs" id="discs">${a.layers.map((l, i) => `<div class="disc" data-i="${i}" style="top:${i * 28}px;z-index:${9 - i}"><span class="mk"></span></div>`).join("")}<div class="beam" id="beam"></div></div>
       <div class="verdict"><div class="v1 ${a.status === "rejected" ? "red" : a.status === "cleared" ? "green" : ""}">${esc(a.line1)}</div>${a.line2 ? `<div class="v2">${esc(a.line2)}</div>` : ""}</div>
       <div class="list" style="margin-top:12px">${a.layers.map(l => `<div class="lrow" style="min-height:52px"><span class="lnum ${l.pass === true ? "ok" : l.pass === false ? "bad" : ""}">${l.n}</span>
         <div class="main"><div class="t" style="font-size:15px">${esc(l.name)}</div></div>
@@ -272,15 +272,15 @@
     const key = a.mint + a.ts, discs = [...document.querySelectorAll(".disc")], b = $("#beam");
     const paint = (i) => { const l = a.layers[i]; if (l.pass === true) { discs[i].classList.add("ok"); discs[i].querySelector(".mk").textContent = "✓"; }
       else if (l.pass === false) { discs[i].classList.add("bad"); discs[i].querySelector(".mk").textContent = "✕"; } };
-    const known = a.layers.findIndex(l => l.pass === null && l.value !== "not checked");
-    const upto = known === -1 ? 8 : known;
-    if (REDUCED || S.animated[key]) { for (let i = 0; i < upto; i++) paint(i); if (known !== -1) { b.style.opacity = 1; b.style.top = (known * 31 + 21) + "px"; } return; }
+    const known = a.layers.findIndex(l => l.pass === null && l.value !== "not checked" && l.value !== "not in this run");
+    const upto = known === -1 ? a.layers.length : known;
+    if (REDUCED || S.animated[key]) { for (let i = 0; i < upto; i++) paint(i); if (known !== -1) { b.style.opacity = 1; b.style.top = (known * 28 + 21) + "px"; } return; }
     S.animated[key] = true;
     let i = 0;
     b.style.top = "21px"; b.style.opacity = 1;
     const next = () => {
       if (i >= upto) { b.style.opacity = known === -1 ? 0 : 1; return; }
-      b.style.top = (i * 31 + 21) + "px";
+      b.style.top = (i * 28 + 21) + "px";
       setTimeout(() => { paint(i); i++; setTimeout(next, 150); }, 350);
     };
     next();
