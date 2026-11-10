@@ -53,7 +53,7 @@
     const v = S.view, list = ["state.json"];
     if (v.name === "home") list.push(`chart-${S.range}.json`);
     if (v.name === "activity") list.push("activity-0.json");
-    if (v.name === "agents") ["scanner", "auditor", "analyst", "executor", "risk"].forEach(a => list.push(`agents/${a}.json`));
+    if (v.name === "agents") ["scanner", "scanner2", "auditor", "analyst", "executor", "risk"].forEach(a => list.push(`agents/${a}.json`));
     if (v.name === "account") list.push("account.json", "settings.json");
     if (v.name === "coin" && v.mint) list.push(`coin/${v.mint}.json`, `audit/${v.mint}.json`);
     if (v.name === "audit") list.push(v.mint ? `audit/${v.mint}.json` : "audit/latest.json");
@@ -135,8 +135,9 @@
   function agentCard(c, st) {
     const dot = `<span class="sdot ${c.status === "running" ? "" : c.status}"></span>`;
     let body = "";
-    if (c.key === "scanner") {
-      body = c.count === 0 && !(c.feed || []).length ? `<div class="sec">Listening for graduations</div>` :
+    if (c.key === "scanner" || c.key === "scanner2") {
+      const idle = c.key === "scanner2" ? (c.enabled === false ? "Off" : "Watching pools over " + short(c.minLiq) + " liquidity") : "Listening for graduations";
+      body = c.count === 0 && !(c.feed || []).length ? `<div class="sec">${esc(idle)}</div>` :
         `<div class="feed">${(c.feed || []).slice(0, 5).map(f => f.verdict === "pass"
           ? `<div class="row pass"><span class="l">${esc(f.text)}</span></div>`
           : `<div class="row kill"><span class="l">${esc(f.name)}</span><span class="r">${esc(f.reason || "")}</span></div>`).join("")}</div>`;
@@ -213,7 +214,7 @@
 
   function agents() {
     const st = S.d["state.json"];
-    const order = ["scanner", "auditor", "analyst", "executor", "risk"];
+    const order = ["scanner", "scanner2", "auditor", "analyst", "executor", "risk"].filter(k => !st || st.agents.some(a => a.key === k));
     let h = `<h1 class="large">Agents</h1>`;
     if (!st) { $("#view").innerHTML = h + order.map(() => sk(220, 0, 16) + "<div style='height:14px'></div>").join(""); return; }
     h += order.map(k => {
@@ -331,7 +332,7 @@
       <a class="lrow" href="https://t.me/${esc(a.telegram.bot.replace("@", ""))}" target="_blank" rel="noopener"><div class="main"><div class="t">Send test push</div><div class="s">Send "test" to the bot</div></div>${chev}</a>
       <div class="lrow"><div class="main"><div class="t">Web push</div><div class="s">${esc(a.webpush.note)}</div></div></div></div>
       <div class="note">${esc(a.readOnlyNote)}</div>`;
-    const label = { scanner: "Scanner", auditor: "Auditor", analyst: "Analyst", executor: "Executor", risk: "Risk", desk: "Desk", paper: "Paper fills" };
+    const label = { scanner: "Scanner", scanner2: "Big coins", auditor: "Auditor", analyst: "Analyst", executor: "Executor", risk: "Risk", desk: "Desk", paper: "Paper fills" };
     s.groups.forEach(g => {
       h += `<div class="group-title" id="set-${g.agent}">${label[g.agent]}</div><div class="list">` + g.items.map(it => {
         let ctl;
