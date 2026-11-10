@@ -59,7 +59,7 @@
     const v = S.view, list = ["state.json"];
     if (v.name === "home") list.push(`chart-${S.range}.json`);
     if (v.name === "activity") list.push("activity-0.json");
-    if (v.name === "agents") ["scanner", "scanner2", "auditor", "analyst", "executor", "risk"].forEach(a => list.push(`agents/${a}.json`));
+    if (v.name === "agents") ["scanner", "scanner2", "scanner3", "auditor", "analyst", "executor", "risk"].forEach(a => list.push(`agents/${a}.json`));
     if (v.name === "account") list.push("account.json", "settings.json");
     if (v.name === "coin" && v.mint) list.push(`coin/${v.mint}.json`, `audit/${v.mint}.json`);
     if (v.name === "audit") list.push(v.mint ? `audit/${v.mint}.json` : "audit/latest.json");
@@ -200,7 +200,9 @@
   const paperPill = mode => mode === "PAPER" ? `<span class="pill paper">PAPER</span>` : "";
   /* strategy badge (Nov 10): every trade row / position says which strategy took it; old rows without a tag = normal */
   const TRADE_KINDS = ["bought", "sold", "stopped"];
-  const stratBadge = (s, kind) => (s || (kind && TRADE_KINDS.includes(kind))) ? `<span class="sb ${s === "scalp" ? "scalp" : "normal"}">${s === "scalp" ? "Scalp" : "Normal"}</span>` : "";
+  const SB = { scalp: ["scalp", "Scalp"], compounder: ["comp", "Compounder"], normal: ["normal", "Normal"] };
+  const stratBadge = (s, kind) => (s || (kind && TRADE_KINDS.includes(kind))) ? `<span class="sb ${(SB[s] || SB.normal)[0]}">${(SB[s] || SB.normal)[1]}</span>` : "";
+  const hypeCls = v => v == null ? "" : v >= 0.5 ? "green" : v >= 0.25 ? "orange" : "sec";
   const chev = `<svg class="chev" viewBox="0 0 8 14"><path d="M1 1l6 6-6 6"/></svg>`;
   const backBtn = label => `<button class="back" data-back><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg>${esc(label || "Back")}</button>`;
   const sk = (h, mt = 12, mx = 16) => `<div class="sk" style="height:${h}px;margin:${mt}px ${mx}px 0"></div>`;
@@ -220,6 +222,7 @@
   const ICON = {
     scanner: ["#0fb5a6", `<path d="M12 3l2.2 3.8 4.3-.9-.9 4.3L21.4 12l-3.8 2.2.9 4.3-4.3-.9L12 21.4l-2.2-3.8-4.3.9.9-4.3L2.6 12l3.8-2.2-.9-4.3 4.3.9z" fill="#fff" stroke="none"/><circle cx="12" cy="12" r="3" fill="#0fb5a6" stroke="none"/>`],
     scanner2: ["#5e5ce6", `<circle cx="11" cy="11" r="6" stroke="#fff" fill="none"/><path d="M20 20l-4.5-4.5" stroke="#fff"/><path d="M8.5 11h5M11 8.5v5" stroke="#fff"/>`],
+    scanner3: ["#ff9f0a", `<path d="M12 21c-3.5-1.5-6-4.6-6-8.4C6 8 9.2 5 12 3c2.8 2 6 5 6 9.6 0 3.8-2.5 6.9-6 8.4z" fill="#fff" stroke="none"/><path d="M12 21V11" stroke="#ff9f0a" stroke-width="2"/><path d="M12 15l-3-2.5M12 13l3-2.5" stroke="#ff9f0a" stroke-width="1.6"/>`],
     auditor: ["#3a3a3c", `<ellipse cx="12" cy="6" rx="7" ry="2.5" fill="#fff" stroke="none"/><ellipse cx="12" cy="12" rx="7" ry="2.5" fill="#30d158" stroke="none"/><ellipse cx="12" cy="18" rx="7" ry="2.5" fill="#ff453a" stroke="none"/>`],
     analyst: ["#e5352b", `<path d="M12 4l9 15H3z" fill="#fff" stroke="none"/><circle cx="9.6" cy="14" r="1.2" fill="#e5352b" stroke="none"/><circle cx="14.4" cy="14" r="1.2" fill="#e5352b" stroke="none"/>`],
     executor: ["#7d5cff", `<path d="M6 8h12a4 4 0 0 1 4 4v1a4 4 0 0 1-7 2.6h-6A4 4 0 0 1 2 13v-1a4 4 0 0 1 4-4z" fill="#fff" stroke="none"/><circle cx="8.5" cy="12" r="1.3" fill="#7d5cff" stroke="none"/><circle cx="15.5" cy="12" r="1.3" fill="#7d5cff" stroke="none"/>`],
@@ -227,7 +230,7 @@
     lock: ["#30d158", `<rect x="5" y="11" width="14" height="10" rx="2" fill="#fff" stroke="none"/><path d="M8 11V8a4 4 0 0 1 8 0v3" stroke="#fff" fill="none" stroke-width="2"/>`]
   };
   const icon = (k, size = 32) => { const [bg, p] = ICON[k] || ICON.scanner; return `<span class="aic" style="width:${size}px;height:${size}px;background:${bg}"><svg viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round">${p}</svg></span>`; };
-  const SUBCOL = { scanner: "#64d2ff", scanner2: "#a5a3ff", auditor: "#ebebf599", analyst: "#ffd60a", executor: "#30d158", risk: "#ff6b9a" };
+  const SUBCOL = { scanner: "#64d2ff", scanner2: "#a5a3ff", scanner3: "#ffb340", auditor: "#ebebf599", analyst: "#ffd60a", executor: "#30d158", risk: "#ff6b9a" };
 
   function splitVal(a) {
     const parts = String(a.value || "").split(" · ");
@@ -240,14 +243,16 @@
     const badge = { bought: "↗", sold: "↙", stopped: "✕", rejected: "–" }[a.kind] || "·";
     return `<button class="arow" data-open="${a.target}" data-mint="${esc(a.mint)}">
       <span class="avw">${avatar(a.mint, a.title, 40)}<i class="kb ${a.kind}">${badge}</i></span>
-      <div class="main"><div class="t">${esc(a.title)}${stratBadge(a.strategy, a.kind)}</div><div class="s">${esc(subtitle.replace(/ · Scalp\b/, ""))}</div></div>
+      <div class="main"><div class="t">${esc(a.title)}${stratBadge(a.strategy, a.kind)}</div><div class="s">${esc(subtitle.replace(/ · (Scalp|Compounder)\b/, ""))}</div></div>
       <div class="v"><div class="m ${valCls}">${esc(main)}</div><div class="s">${esc(sub)}</div></div></button>`;
   }
 
   /* compact agent cards (home carousel) */
   function feedRows(c) {
     const rows = (c.feed || []).slice(0, 3);
-    if (!rows.length) return `<div class="cs">${esc(c.key === "scanner2" ? (c.enabled === false ? "Off" : "Watching pools over " + short(c.minLiq)) : "Listening for graduations")}</div>`;
+    if (!rows.length) return `<div class="cs">${esc(c.key === "scanner2" ? (c.enabled === false ? "Off" : "Watching pools over " + short(c.minLiq))
+      : c.key === "scanner3" ? (c.enabled === false ? "Off" : `Young coins from ${short(c.minMcap)} mcap · liq ${short(c.minLiq)}+${c.waiting ? " · " + c.waiting + " waiting" : ""}`)
+      : "Listening for graduations")}</div>`;
     return rows.map(f => f.verdict === "pass"
       ? `<div class="fr">${avatar(f.mint, f.name, 16)}<span class="fn pass">${esc(f.name)}</span><span class="fx green">passed</span></div>`
       : `<div class="fr">${avatar(f.mint, f.name, 16)}<span class="fn kill">${esc(f.name)}</span><span class="fx">${esc(f.reason || "")}</span></div>`).join("");
@@ -255,7 +260,7 @@
   function agentCard(c) {
     const sub = `<div class="asub" style="color:${SUBCOL[c.key]}"><span class="sd ${c.status === "running" ? "" : c.status}"></span>${esc(c.status === "running" ? c.headline : c.status === "paused" ? "Paused" : "Down")}</div>`;
     let body = "";
-    if (c.key === "scanner" || c.key === "scanner2") body = `<div class="feedc">${feedRows(c)}</div>`;
+    if (c.key === "scanner" || c.key === "scanner2" || c.key === "scanner3") body = `<div class="feedc">${feedRows(c)}</div>`;
     else if (c.key === "auditor") {
       const strips = (c.last ? c.last.strips : Array(9).fill(null)).map(s => `<i class="${s === true ? "ok" : s === false ? "bad" : ""}"></i>`).join("");
       body = `<div class="strips">${strips}</div><div class="cb">${esc(c.running ? "taking apart..." : c.last ? c.last.name : "No coin yet")}</div>
@@ -337,6 +342,7 @@
         <div class="today num" id="today"></div></div>
         <div class="chart-box"><canvas id="line"></canvas><div class="chart-empty" id="chartEmpty" hidden>Waiting for the first trade</div></div>
         <div class="ranges" id="ranges">${["LIVE", "1H", "4H", "1D", "1W", "ALL"].map(r => `<button data-range="${r}">${r === "LIVE" ? '<i class="blink"></i>' : ""}${r}</button>`).join("")}</div>
+        <div id="compBox"></div>
         <div class="sec-head"><h2>Agents</h2><span class="green" id="running"></span></div><div class="carousel" id="cards"></div><div class="pdots" id="pdots"></div>
         <div class="sec-head"><h2>Activity</h2><button class="link" data-tab="activity">See all</button></div><div id="act"></div>`;
       $("#cards").addEventListener("scroll", pageDots, { passive: true });
@@ -351,6 +357,7 @@
     ticker(st);
     document.querySelectorAll("#ranges button").forEach(b => b.classList.toggle("on", b.dataset.range === S.range));
     $("#running").textContent = `${st.running} running`;
+    compBox(st);
     const sl = $("#cards").scrollLeft;
     $("#cards").innerHTML = st.agents.map(agentCard).join("");
     $("#cards").scrollLeft = sl;
@@ -363,6 +370,34 @@
     if (S.range === "LIVE" && data.points.length && bal !== st.balance) data.points.push([new Date().toISOString(), bal]);
     $("#chartEmpty").hidden = data.points.length >= 2;
     Charts.drawLine($("#line"), data, S.range, imgFor);
+  }
+  /* compounder (Nov 10): its own paper sub-budget, wins roll into its free cash -> compounding curve */
+  function compBox(st) {
+    const cs = st.strategies && st.strategies.compounder, el = $("#compBox");
+    if (!el) return;
+    if (!cs || !cs.budget) { el.innerHTML = ""; return; }
+    const up = cs.equity >= cs.budget;
+    const key = JSON.stringify([cs.equity, cs.free, cs.open, cs.enabled, (cs.curve || []).length]);
+    if (el.dataset.k === key) return;
+    el.dataset.k = key;
+    el.innerHTML = `<div class="cmp"><div class="cmph"><span class="sb comp" style="margin-left:0">Compounder</span><span class="sec">${cs.enabled ? "on" : "off"} · ${cs.open} open · ${cs.trades} trades${cs.halves ? " · " + cs.halves + " halves" : ""}</span></div>
+      <div class="cmpr"><div><div class="k">Sub-budget</div><div class="val num">${usd(cs.equity)}</div><div class="s ${up ? "green" : "red"}">${(cs.multiple || 1).toFixed(2)}× of ${usd(cs.budget)}</div></div>
+        <div><div class="k">Free cash</div><div class="val num">${usd(cs.free)}</div><div class="s sec">${usd(cs.inTrades)} in trades</div></div>
+        <canvas id="cmpc"></canvas></div><div class="s sec cmpn">${esc(cs.rules || "")}</div></div>`;
+    spark($("#cmpc"), (cs.curve || []).map(p => p[1]), cs.budget);
+  }
+  function spark(cv, vals, base) {
+    if (!cv) return;
+    const dpr = window.devicePixelRatio || 1, w = cv.clientWidth || 120, h = cv.clientHeight || 44;
+    cv.width = w * dpr; cv.height = h * dpr;
+    const ctx = cv.getContext("2d"); ctx.scale(dpr, dpr); ctx.clearRect(0, 0, w, h);
+    const v = vals.length >= 2 ? vals : [base, base];
+    const lo = Math.min(base, ...v), hi = Math.max(base, ...v), span = (hi - lo) || 1;
+    const y = x => h - 4 - (x - lo) / span * (h - 8);
+    ctx.strokeStyle = "rgba(235,235,245,.25)"; ctx.setLineDash([3, 3]); ctx.beginPath(); ctx.moveTo(0, y(base)); ctx.lineTo(w, y(base)); ctx.stroke(); ctx.setLineDash([]);
+    ctx.strokeStyle = v[v.length - 1] >= base ? "#30d158" : "#ff453a"; ctx.lineWidth = 2; ctx.beginPath();
+    v.forEach((p, i) => { const xx = i * (w - 2) / (v.length - 1) + 1; i ? ctx.lineTo(xx, y(p)) : ctx.moveTo(xx, y(p)); });
+    ctx.stroke();
   }
   function pageDots() {
     const c = $("#cards"); if (!c) return;
@@ -392,7 +427,7 @@
 
   function agents() {
     const st = S.d["state.json"];
-    const order = ["scanner", "scanner2", "auditor", "analyst", "executor", "risk"].filter(k => !st || st.agents.some(a => a.key === k));
+    const order = ["scanner", "scanner2", "scanner3", "auditor", "analyst", "executor", "risk"].filter(k => !st || st.agents.some(a => a.key === k));
     let h = `<h1 class="large">Agents ${paperPill(st && st.mode)}</h1>`;
     if (!st) { $("#view").innerHTML = h + order.map(() => sk(220, 0, 16) + "<div style='height:14px'></div>").join(""); return; }
     h += order.map(k => {
@@ -507,7 +542,11 @@
     $("#stats").innerHTML = `<div><div class="k">Market cap</div><div class="val num">${short(lv && lv.mc != null ? lv.mc : c.marketCap)}</div></div>
       <div><div class="k">Liquidity</div><div class="val num">${short(lv && lv.liq != null ? lv.liq : c.liquidity)}</div></div>
       <div><div class="k">Holders</div><div class="val num">${c.holders == null ? "n/a" : c.holders.toLocaleString("en-US")}</div></div>
-      <div><div class="k">24h volume</div><div class="val num">${short(lv && lv.vol24 != null ? lv.vol24 : c.volume24h)}</div></div>`;
+      <div><div class="k">24h volume</div><div class="val num">${short(lv && lv.vol24 != null ? lv.vol24 : c.volume24h)}</div></div>`
+      + (c.hype ? `<div class="hyp"><div class="k">Hype</div><div class="val num ${hypeCls(c.hype.value)}">${c.hype.value.toFixed(2)}</div>
+        <div class="s sec">${esc(c.hype.text || "")}${c.hype.minCompounder != null ? ` · Compounder needs ${c.hype.minCompounder}` : ""}</div></div>`
+        : `<div class="hyp"><div class="k">Hype</div><div class="val num sec">n/a</div><div class="s sec">checked when the Analyst scores the coin</div></div>`)
+      + (c.venue === "curve" ? `<div class="hyp"><div class="k">Venue</div><div class="val">pump.fun curve</div><div class="s sec">not graduated yet · Young coins</div></div>` : "");
     let exitLine = null, exitLabel = "";
     if (p) {
       exitLine = exitLineOf(p, m); exitLabel = p.trailActive ? "Risk trailing stop" : "Risk stop";
@@ -516,8 +555,9 @@
       $("#cards2").innerHTML = `<div class="pcard">${icon("executor", 40)}<div class="pm"><div class="pt">Your position${stratBadge(p.strategy || "normal")}</div><div class="ps">${usd(p.size)} in · Executor</div></div>
           <div class="pv"><div class="pbig num">${usd(val)}</div><div class="num ${pnl >= 0 ? "green" : "red"}">${signedUsd(pnl)}</div></div></div>
         <div class="pcard">${icon("risk", 40)}<div class="pm"><div class="pt">Risk · ${p.trailActive ? "trailing stop" : "stop"}</div>
-          <div class="ps">${p.trailActive ? `exit if it drops ${p.trailPct}% from top` : `exit at -${esc(p.stopPct)}% · trails ${p.trailPct}% from ${px(p.trailStart)}`}${p.tp ? ` · take profit ${px(p.tp)}` : ""}</div>
-          <div class="ps ter">${p.strategy === "scalp" ? "time stop" : "timeout"} in ${lh ? lh + "h " : ""}${lm}m</div></div><div class="pv"><div class="mono orange">${axis(exitLine)}</div></div></div>`;
+          <div class="ps">${p.strategy === "compounder" ? (p.halfDone ? `half sold · rest exits if it drops ${p.trailPct}% from top` : `exit at -${esc(p.stopPct)}% · sells half at ${px(p.half)} (2x)`)
+            : p.trailActive ? `exit if it drops ${p.trailPct}% from top` : `exit at -${esc(p.stopPct)}% · trails ${p.trailPct}% from ${px(p.trailStart)}`}${p.tp ? ` · take profit ${px(p.tp)}` : ""}</div>
+          <div class="ps ter">${p.strategy === "compounder" ? (p.timeoutLeftS > 9e6 ? "no time stop" : `time stop in ${lh ? lh + "h " : ""}${lm}m`) : `${p.strategy === "scalp" ? "time stop" : "timeout"} in ${lh ? lh + "h " : ""}${lm}m`}</div></div><div class="pv"><div class="mono orange">${axis(exitLine)}</div></div></div>`;
     } else if (c.lastTrade) {
       const lt = c.lastTrade;
       $("#cards2").innerHTML = `<div class="pcard">${icon("risk", 40)}<div class="pm"><div class="pt">Last trade${stratBadge(lt.strategy || "normal")}</div><div class="ps">${esc(lt.reason || "closed")} · in ${px(lt.entry)} · out ${px(lt.exit)}</div></div>
@@ -544,7 +584,7 @@
         `<div class="lrow"><div class="main"><div class="t">${esc(x.name)}</div><div class="s">${esc(x.detail)}</div></div><div class="v ${x.ok ? "green" : ""}">${esc(x.status)}</div></div>`).join("") +
         `<div class="lrow"><div class="main"><div class="t">Live prices in this app</div><div class="s">DexScreener, polled by your browser every ${LIVE_S}s for the coins on the desk</div></div><div class="v ${L.ok ? "green" : ""}">${L.ok == null ? "starting" : L.ok ? "on" : "fallback"}</div></div></div>` : ""}
       <div class="note">${esc(a.readOnlyNote)}</div>`;
-    const label = { scanner: "Scanner", scanner2: "Big coins", auditor: "Auditor", analyst: "Analyst", executor: "Executor", risk: "Risk", desk: "Desk", paper: "Paper fills" };
+    const label = { scanner: "Scanner", scanner2: "Big coins", scanner3: "Young coins", compounder: "Compounder", hype: "Hype check", scalp: "Scalp", strategy: "Strategies", auditor: "Auditor", analyst: "Analyst", executor: "Executor", risk: "Risk", desk: "Desk", paper: "Paper fills" };
     s.groups.forEach(g => {
       h += `<div class="group-title" id="set-${g.agent}">${label[g.agent] || esc(g.agent)}</div><div class="list">` + g.items.map(it => {
         let ctl;
