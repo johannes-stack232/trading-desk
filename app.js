@@ -331,6 +331,8 @@
       <div class="lrow"><div class="main"><div class="t">Telegram</div><div class="s">${esc(a.telegram.bot)}</div></div><div class="v ${a.telegram.connected ? "green" : "red"}">${a.telegram.connected ? "Connected" : "Not connected"}</div></div>
       <a class="lrow" href="https://t.me/${esc(a.telegram.bot.replace("@", ""))}" target="_blank" rel="noopener"><div class="main"><div class="t">Send test push</div><div class="s">Send "test" to the bot</div></div>${chev}</a>
       <div class="lrow"><div class="main"><div class="t">Web push</div><div class="s">${esc(a.webpush.note)}</div></div></div></div>
+      ${a.integrations ? `<div class="group-title">Data sources</div><div class="list">` + a.integrations.map(x =>
+        `<div class="lrow"><div class="main"><div class="t">${esc(x.name)}</div><div class="s">${esc(x.detail)}</div></div><div class="v ${x.ok ? "green" : ""}">${esc(x.status)}</div></div>`).join("") + `</div>` : ""}
       <div class="note">${esc(a.readOnlyNote)}</div>`;
     const label = { scanner: "Scanner", scanner2: "Big coins", auditor: "Auditor", analyst: "Analyst", executor: "Executor", risk: "Risk", desk: "Desk", paper: "Paper fills" };
     s.groups.forEach(g => {
