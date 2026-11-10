@@ -1,17 +1,24 @@
-/* Grok Bot Desk · plan B client. Reads DATA_PATH from #d= once, keeps it in localStorage,
-   polls the JSON files. Every FOMO link comes from the JSON (written by links.py). */
+/* Grok Bot Desk · plan B client. Reads DATA_PATH and the AES key from #d=…&k=… once, keeps them in localStorage,
+   polls the encrypted data files and decrypts them with WebCrypto AES-GCM. Every FOMO link comes from the JSON (written by links.py). */
 (function () {
   "use strict";
   const POLL_S = 15, STALE_MIN = 15;
   const REDUCED = Charts.REDUCED;
   const $ = (s, el = document) => el.querySelector(s);
   const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-  const S = { dp: null, view: { name: "home" }, range: "LIVE", d: {}, offline: false, lastOk: null, retryAt: 0, failures: 0, prevChart: null, animated: {} };
+  const S = { dp: null, dk: null, decryptFail: false, view: { name: "home" }, range: "LIVE", d: {}, offline: false, lastOk: null, retryAt: 0, failures: 0, prevChart: null, animated: {} };
 
   /* ---------- boot: DATA_PATH from the fragment, then strip it from the address bar */
   const hash = new URLSearchParams(location.hash.replace(/^#/, ""));
-  if (hash.get("d")) { localStorage.setItem("dp", hash.get("d")); }
+  if (hash.get("d") || hash.get("k")) {
+    // new link: drop everything cached under the old path/key
+    Object.keys(localStorage).filter(k => k.startsWith("lg:")).forEach(k => localStorage.removeItem(k));
+    if (hash.get("d")) localStorage.setItem("dp", hash.get("d"));
+    if (hash.get("k")) localStorage.setItem("dk", hash.get("k"));
+  }
   S.dp = localStorage.getItem("dp");
+  S.dk = localStorage.getItem("dk");
+  if (!S.dk) S.dp = null;   // without the key there is nothing we can read
   if (location.hash) history.replaceState(null, "", location.pathname + location.search);
   const q = new URLSearchParams(location.search);
   if (q.get("view")) S.view = { name: q.get("view"), mint: q.get("mint") || null };
@@ -28,9 +35,11 @@
   /* ---------- data */
   async function get(rel) {
     if (!S.dp) throw new Error("no data path");
-    const r = await fetch(`d/${encodeURIComponent(S.dp)}/${rel}?t=${Date.now()}`, { cache: "no-store" });
+    const r = await fetch(`d/${encodeURIComponent(S.dp)}/${rel.replace(/\.json$/, ".bin")}?t=${Date.now()}`, { cache: "no-store" });
     if (!r.ok) throw Object.assign(new Error("HTTP " + r.status), { status: r.status });
-    const j = await r.json();
+    let j;
+    try { j = await DeskCrypto.decryptJSON(S.dk, await r.arrayBuffer()); }
+    catch (e) { throw Object.assign(new Error("decrypt"), { decrypt: true }); }
     try { localStorage.setItem("lg:" + rel, JSON.stringify(j)); } catch (e) { /* quota */ }
     return j;
   }
@@ -47,12 +56,18 @@
   }
   async function poll() {
     const files = need();
-    let ok = true, notFound = [];
+    let ok = true, notFound = [], bad = false;
     await Promise.all(files.map(async f => {
       try { S.d[f] = await get(f); }
-      catch (e) { if (e.status === 404 && f !== "state.json") { notFound.push(f); S.d[f] = S.d[f] || cached(f) || null; } else { ok = false; S.d[f] = S.d[f] || cached(f); } }
+      catch (e) { if (e.decrypt) { bad = true; ok = false; }
+        else if (e.status === 404 && f !== "state.json") { notFound.push(f); S.d[f] = S.d[f] || cached(f) || null; } else { ok = false; S.d[f] = S.d[f] || cached(f); } }
     }));
     S.notFound = notFound;
+    S.decryptFail = bad;
+    if (bad) {   // never show numbers we could not verify: drop data + cache, show the error states
+      S.d = {};
+      Object.keys(localStorage).filter(k => k.startsWith("lg:")).forEach(k => localStorage.removeItem(k));
+    }
     const st = S.d["state.json"];
     const stale = st && (Date.now() - Date.parse(st.updated_at)) / 60000 > STALE_MIN;
     if (ok) { S.lastOk = st ? st.updated_at : new Date().toISOString(); S.failures = 0; }
@@ -67,7 +82,7 @@
     const n = Math.max(0, Math.round((S.retryAt - Date.now()) / 1000));
     const st = S.d["state.json"];
     const last = st ? hm(st.updated_at) : (S.lastOk ? hm(S.lastOk) : "never");
-    el.textContent = S.dp ? `Desk offline · retrying in ${n}s · last update ${last}` : "Open the app once with its private link";
+    el.textContent = S.decryptFail ? "Can't decrypt desk data · open the app once with its new private link" : S.dp ? `Desk offline · retrying in ${n}s · last update ${last}` : "Open the app once with its private link";
     el.hidden = false;
   }
   setInterval(offlineRow, 1000);
