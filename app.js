@@ -1,4 +1,4 @@
-/* Grok Bot Desk · plan B client. Reads DATA_PATH and the AES key from #d=…&k=… once, keeps them in localStorage,
+/* Grok Bot Desk · plan B client. Reads DATA_PATH and the AES key from #d=…&k=… on every load (kept in the URL), localStorage as fallback,
    polls the encrypted data files and decrypts them with WebCrypto AES-GCM. Every FOMO link comes from the JSON (written by links.py). */
 (function () {
   "use strict";
@@ -8,18 +8,23 @@
   const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const S = { dp: null, dk: null, decryptFail: false, view: { name: "home" }, range: "LIVE", d: {}, offline: false, lastOk: null, retryAt: 0, failures: 0, prevChart: null, animated: {} };
 
-  /* ---------- boot: DATA_PATH from the fragment, then strip it from the address bar */
+  /* ---------- boot: credentials from the #d=…&k=… fragment on EVERY load (first), localStorage only as fallback.
+     The fragment is deliberately kept in the address bar: iOS "Add to Home Screen" saves the current URL, and the
+     Home Screen app has its own storage, separate from Safari. The fragment is never sent to the server. */
   const hash = new URLSearchParams(location.hash.replace(/^#/, ""));
-  if (hash.get("d") || hash.get("k")) {
-    // new link: drop everything cached under the old path/key
-    Object.keys(localStorage).filter(k => k.startsWith("lg:")).forEach(k => localStorage.removeItem(k));
-    if (hash.get("d")) localStorage.setItem("dp", hash.get("d"));
-    if (hash.get("k")) localStorage.setItem("dk", hash.get("k"));
+  const fd = hash.get("d"), fk = hash.get("k");
+  if (fd && fk) {
+    if (localStorage.getItem("dp") !== fd || localStorage.getItem("dk") !== fk) {
+      // different link than last time: drop everything cached under the old path/key
+      Object.keys(localStorage).filter(k => k.startsWith("lg:")).forEach(k => localStorage.removeItem(k));
+    }
+    try { localStorage.setItem("dp", fd); localStorage.setItem("dk", fk); } catch (e) { /* private mode */ }
+    S.dp = fd; S.dk = fk;
+  } else {
+    S.dp = localStorage.getItem("dp");
+    S.dk = localStorage.getItem("dk");
   }
-  S.dp = localStorage.getItem("dp");
-  S.dk = localStorage.getItem("dk");
   if (!S.dk) S.dp = null;   // without the key there is nothing we can read
-  if (location.hash) history.replaceState(null, "", location.pathname + location.search);
   const q = new URLSearchParams(location.search);
   if (q.get("view")) S.view = { name: q.get("view"), mint: q.get("mint") || null };
   if (q.get("range")) S.range = q.get("range");
@@ -82,7 +87,7 @@
     const n = Math.max(0, Math.round((S.retryAt - Date.now()) / 1000));
     const st = S.d["state.json"];
     const last = st ? hm(st.updated_at) : (S.lastOk ? hm(S.lastOk) : "never");
-    el.textContent = S.decryptFail ? "Can't decrypt desk data · open the app once with its new private link" : S.dp ? `Desk offline · retrying in ${n}s · last update ${last}` : "Open the app once with its private link";
+    el.textContent = S.decryptFail ? "Can't decrypt desk data · open the app once with its new private link" : S.dp ? `Desk offline · retrying in ${n}s · last update ${last}` : "Open the private link from Telegram in Safari, then Share → Add to Home Screen";
     el.hidden = false;
   }
   setInterval(offlineRow, 1000);
@@ -346,7 +351,7 @@
     offlineRow();
     const n = S.view.name;
     document.querySelectorAll(".tab").forEach(t => t.classList.toggle("on", t.dataset.tab === n || (n === "coin" || n === "audit") && t.dataset.tab === S.tabBefore));
-    if (!S.dp) { $("#view").innerHTML = `<div class="empty" style="padding-top:120px">Open the app once with its private link.</div>`; return; }
+    if (!S.dp) { $("#view").innerHTML = `<div class="empty" style="padding-top:120px">Open the private link from Telegram in Safari, then Share → Add to Home Screen.</div>`; return; }
     ({ home, agents, activity, audit, coin, account }[n] || home)();
   }
   function go(view) {
