@@ -198,6 +198,9 @@
 
   /* ---------- shared pieces */
   const paperPill = mode => mode === "PAPER" ? `<span class="pill paper">PAPER</span>` : "";
+  /* strategy badge (Nov 10): every trade row / position says which strategy took it; old rows without a tag = normal */
+  const TRADE_KINDS = ["bought", "sold", "stopped"];
+  const stratBadge = (s, kind) => (s || (kind && TRADE_KINDS.includes(kind))) ? `<span class="sb ${s === "scalp" ? "scalp" : "normal"}">${s === "scalp" ? "Scalp" : "Normal"}</span>` : "";
   const chev = `<svg class="chev" viewBox="0 0 8 14"><path d="M1 1l6 6-6 6"/></svg>`;
   const backBtn = label => `<button class="back" data-back><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg>${esc(label || "Back")}</button>`;
   const sk = (h, mt = 12, mx = 16) => `<div class="sk" style="height:${h}px;margin:${mt}px ${mx}px 0"></div>`;
@@ -237,7 +240,7 @@
     const badge = { bought: "↗", sold: "↙", stopped: "✕", rejected: "–" }[a.kind] || "·";
     return `<button class="arow" data-open="${a.target}" data-mint="${esc(a.mint)}">
       <span class="avw">${avatar(a.mint, a.title, 40)}<i class="kb ${a.kind}">${badge}</i></span>
-      <div class="main"><div class="t">${esc(a.title)}</div><div class="s">${esc(subtitle)}</div></div>
+      <div class="main"><div class="t">${esc(a.title)}${stratBadge(a.strategy, a.kind)}</div><div class="s">${esc(subtitle.replace(/ · Scalp\b/, ""))}</div></div>
       <div class="v"><div class="m ${valCls}">${esc(main)}</div><div class="s">${esc(sub)}</div></div></button>`;
   }
 
@@ -510,14 +513,14 @@
       exitLine = exitLineOf(p, m); exitLabel = p.trailActive ? "Risk trailing stop" : "Risk stop";
       const val = price ? p.size * price / p.entry : null, pnl = val != null ? val - p.size : null;
       const left = p.timeoutLeftS - Math.max(0, (Date.now() - Date.parse(c.updated_at)) / 1000), lh = Math.max(0, Math.floor(left / 3600)), lm = Math.max(0, Math.floor(left % 3600 / 60));
-      $("#cards2").innerHTML = `<div class="pcard">${icon("executor", 40)}<div class="pm"><div class="pt">Your position</div><div class="ps">${usd(p.size)} in · Executor</div></div>
+      $("#cards2").innerHTML = `<div class="pcard">${icon("executor", 40)}<div class="pm"><div class="pt">Your position${stratBadge(p.strategy || "normal")}</div><div class="ps">${usd(p.size)} in · Executor</div></div>
           <div class="pv"><div class="pbig num">${usd(val)}</div><div class="num ${pnl >= 0 ? "green" : "red"}">${signedUsd(pnl)}</div></div></div>
         <div class="pcard">${icon("risk", 40)}<div class="pm"><div class="pt">Risk · ${p.trailActive ? "trailing stop" : "stop"}</div>
-          <div class="ps">${p.trailActive ? `exit if it drops ${p.trailPct}% from top` : `exit at -${esc(p.stopPct)}% · trails ${p.trailPct}% from ${px(p.trailStart)}`}</div>
-          <div class="ps ter">timeout in ${lh}h ${lm}m</div></div><div class="pv"><div class="mono orange">${axis(exitLine)}</div></div></div>`;
+          <div class="ps">${p.trailActive ? `exit if it drops ${p.trailPct}% from top` : `exit at -${esc(p.stopPct)}% · trails ${p.trailPct}% from ${px(p.trailStart)}`}${p.tp ? ` · take profit ${px(p.tp)}` : ""}</div>
+          <div class="ps ter">${p.strategy === "scalp" ? "time stop" : "timeout"} in ${lh ? lh + "h " : ""}${lm}m</div></div><div class="pv"><div class="mono orange">${axis(exitLine)}</div></div></div>`;
     } else if (c.lastTrade) {
       const lt = c.lastTrade;
-      $("#cards2").innerHTML = `<div class="pcard">${icon("risk", 40)}<div class="pm"><div class="pt">Last trade</div><div class="ps">${esc(lt.reason || "closed")} · in ${px(lt.entry)} · out ${px(lt.exit)}</div></div>
+      $("#cards2").innerHTML = `<div class="pcard">${icon("risk", 40)}<div class="pm"><div class="pt">Last trade${stratBadge(lt.strategy || "normal")}</div><div class="ps">${esc(lt.reason || "closed")} · in ${px(lt.entry)} · out ${px(lt.exit)}</div></div>
         <div class="pv"><div class="pbig num ${lt.pnl >= 0 ? "green" : "red"}">${signedUsd(lt.pnl)}</div></div></div>`;
     } else $("#cards2").innerHTML = "";
     Charts.drawCandles($("#cnd"), mergedCandles(m, c.candles), { entry: p ? p.entry : null, entryTs: p ? p.openedAt : null, exitLine, exitLabel, price, fmt: axis });

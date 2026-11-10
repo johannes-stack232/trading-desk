@@ -299,3 +299,8 @@ main.pop{animation:popIn .3s cubic-bezier(.2,.9,.3,1)}
 }
 .cs.red{color:var(--red)}.cs.green{color:var(--green)}
 h1.large{display:flex;align-items:center;gap:10px}h1.large .pill.paper{font-family:var(--txt);letter-spacing:0}
+
+/* strategy badges (Nov 10) */
+.sb{display:inline-block;margin-left:6px;padding:1px 6px;border-radius:6px;font-size:10px;font-weight:700;letter-spacing:.3px;vertical-align:2px;text-transform:uppercase}
+.sb.scalp{background:rgba(255,159,10,.18);color:#ff9f0a;border:1px solid rgba(255,159,10,.5)}
+.sb.normal{background:rgba(10,132,255,.14);color:#64d2ff;border:1px solid rgba(10,132,255,.4)}
